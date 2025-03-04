@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   ChatBubbleOvalLeftIcon,
   ArrowPathRoundedSquareIcon,
@@ -10,6 +10,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartSolidIcon } from "@heroicons/react/24/solid";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface Tweet {
   id: string;
@@ -29,8 +30,9 @@ export default function TweetList({ userId }: TweetListProps = {}) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const router = useRouter();
 
-  const fetchTweets = async () => {
+  const fetchTweets = useCallback(async () => {
     try {
       setIsLoading(true);
       // ユーザーIDが指定されている場合はそのユーザーのツイートのみを取得
@@ -54,18 +56,29 @@ export default function TweetList({ userId }: TweetListProps = {}) {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  };
+  }, [userId]);
 
-  // 最初のロード時にツイートを取得
+  // 最初のロード時とURLの変更時にツイートを取得
   useEffect(() => {
     fetchTweets();
-  }, [userId]);
+  }, [fetchTweets]);
 
   // リフレッシュ機能
   const handleRefresh = () => {
     setIsRefreshing(true);
     fetchTweets();
   };
+
+  // 自動更新（30秒ごと）
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!isRefreshing) {
+        fetchTweets();
+      }
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [fetchTweets, isRefreshing]);
 
   const handleLike = async (tweetId: string) => {
     try {

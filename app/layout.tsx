@@ -22,7 +22,7 @@ import { initializeDatabase } from "./lib/db-init";
 import SessionProvider from "./SessionProvider";
 import TweetModal from "./components/TweetModal";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 // サーバーサイドでのみ実行されるデータベースの初期化
 // Next.jsの「ビルド時」に一度だけ実行される
@@ -46,6 +46,7 @@ export default function RootLayout({
 }) {
   const [isTweetModalOpen, setIsTweetModalOpen] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleTweet = async (content: string) => {
     try {
@@ -61,8 +62,17 @@ export default function RootLayout({
         throw new Error("ツイートの投稿に失敗しました");
       }
 
-      // ホームページを更新
-      router.refresh();
+      // モーダルを閉じる
+      setIsTweetModalOpen(false);
+
+      // 現在のページに応じて適切な更新を行う
+      if (pathname === "/") {
+        // ホームページの場合は完全な再読み込み
+        router.refresh();
+      } else {
+        // ホームページに遷移
+        router.push("/");
+      }
     } catch (error) {
       console.error("ツイート投稿エラー:", error);
     }
