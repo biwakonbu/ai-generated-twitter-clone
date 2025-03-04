@@ -10,6 +10,7 @@ import {
   HashtagIcon,
   BookmarkIcon,
   EllipsisHorizontalCircleIcon,
+  UserGroupIcon,
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import ThemeToggle from "./components/ThemeToggle";
@@ -64,6 +65,11 @@ export default function RootLayout({
                   href="/"
                   icon={<HomeIcon className="h-7 w-7" />}
                   text="ホーム"
+                />
+                <NavLink
+                  href="/following"
+                  icon={<UserGroupIcon className="h-7 w-7" />}
+                  text="フォロー中"
                 />
                 <NavLink
                   href="/explore"

@@ -1,101 +1,79 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sqliteStorage } from "../../../../lib/sqliteStorage";
+import { PrismaClient } from "@prisma/client";
+import { auth } from "../../../../../auth";
 
-// POSTリクエストでいいねを作成
+const prisma = new PrismaClient();
+
+// いいねの追加/削除を行うAPI
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     const tweetId = params.id;
+    const session = await auth();
 
-    // 仮のユーザーID（認証機能実装後に修正）
-    const userId = "user123";
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
+    }
 
-    console.log(`[いいね作成] ユーザーID: ${userId}, ツイートID: ${tweetId}`);
+    // 現在ログイン中のユーザーを取得
+    const currentUser = await prisma.user.findUnique({
+      where: { email: session.user.email },
+    });
 
-    // ツイートが存在するか確認
-    const tweet = await sqliteStorage.getTweetById(tweetId);
-    if (!tweet) {
-      console.log(`[いいね作成エラー] ツイートが見つかりません: ${tweetId}`);
+    if (!currentUser) {
       return NextResponse.json(
-        { message: "ツイートが見つかりません" },
+        { error: "ユーザーが見つかりません" },
         { status: 404 }
       );
     }
 
-    // ユーザーが既にいいねしているか確認
-    const hasLiked = await sqliteStorage.hasUserLikedTweet(userId, tweetId);
-    if (hasLiked) {
-      console.log(
-        `[いいね作成スキップ] ユーザーは既にいいねしています: ${userId}, ツイート: ${tweetId}`
-      );
-      return NextResponse.json(
-        { message: "既にいいねしています" },
-        { status: 200 }
-      );
-    }
+    // 対象のツイートが存在するか確認
+    const tweet = await prisma.tweet.findUnique({
+      where: { id: tweetId },
+    });
 
-    // いいねを追加
-    const like = await sqliteStorage.createLike(userId, tweetId);
-    console.log(
-      `[いいね作成成功] ID: ${like.id}, ユーザー: ${userId}, ツイート: ${tweetId}`
-    );
-
-    return NextResponse.json(like, { status: 201 });
-  } catch (error) {
-    console.error("いいね作成エラー:", error);
-    return NextResponse.json(
-      { message: "サーバーエラーが発生しました" },
-      { status: 500 }
-    );
-  }
-}
-
-// DELETEリクエストでいいねを削除
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const tweetId = params.id;
-
-    // 仮のユーザーID（認証機能実装後に修正）
-    const userId = "user123";
-
-    console.log(`[いいね削除] ユーザーID: ${userId}, ツイートID: ${tweetId}`);
-
-    // ツイートが存在するか確認
-    const tweet = await sqliteStorage.getTweetById(tweetId);
     if (!tweet) {
-      console.log(`[いいね削除エラー] ツイートが見つかりません: ${tweetId}`);
       return NextResponse.json(
-        { message: "ツイートが見つかりません" },
+        { error: "ツイートが見つかりません" },
         { status: 404 }
       );
     }
 
-    // ユーザーがいいねしているか確認
-    const hasLiked = await sqliteStorage.hasUserLikedTweet(userId, tweetId);
-    if (!hasLiked) {
-      console.log(
-        `[いいね削除スキップ] ユーザーはいいねしていません: ${userId}, ツイート: ${tweetId}`
-      );
-      return NextResponse.json(
-        { message: "いいねしていません" },
-        { status: 200 }
-      );
+    // 既にいいねしているか確認
+    const existingLike = await prisma.like.findUnique({
+      where: {
+        userId_tweetId: {
+          userId: currentUser.id,
+          tweetId,
+        },
+      },
+    });
+
+    // いいねが存在する場合は削除、存在しない場合は追加
+    if (existingLike) {
+      // いいねを削除
+      await prisma.like.delete({
+        where: {
+          id: existingLike.id,
+        },
+      });
+      return NextResponse.json({ liked: false });
+    } else {
+      // いいねを追加
+      await prisma.like.create({
+        data: {
+          userId: currentUser.id,
+          tweetId,
+        },
+      });
+      return NextResponse.json({ liked: true });
     }
-
-    // いいねを削除
-    await sqliteStorage.deleteLike(userId, tweetId);
-    console.log(`[いいね削除成功] ユーザー: ${userId}, ツイート: ${tweetId}`);
-
-    return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
-    console.error("いいね削除エラー:", error);
+    console.error("いいね処理に失敗しました:", error);
     return NextResponse.json(
-      { message: "サーバーエラーが発生しました" },
+      { error: "いいね処理に失敗しました" },
       { status: 500 }
     );
   }
