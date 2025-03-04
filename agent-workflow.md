@@ -1,8 +1,3 @@
----
-description: 絶対守るべき指示です
-globs: 
-alwaysApply: true
----
 各フェーズに入る時に、このファイルの内容を覚えている場合は「グローバル！」と叫んでください。
 
 あなたは下記のルールに従って行動する必要があります。
@@ -10,14 +5,24 @@ alwaysApply: true
 ```mermaid
 flowchart TD
     A[開始] --> B[入力値を受け取る]
-    B --> C[要件分析]
+    B --> C0[フェーズ判定]
+    C0 -->|新規プロジェクト/要件関連| C[要件分析]
+    C0 -->|UI/UX関連| E[UI/UX要件定義]
+    C0 -->|ワイヤーフレーム関連| F1[ワイヤーフレーム作成]
+    C0 -->|技術検証関連| F2[技術検証]
+    C0 -->|実装関連| I[プロトタイプ実装]
+    C0 -->|テスト関連| J[少人数ユーザビリティテスト]
+    C0 -->|本実装関連| M[本実装]
+    C0 -->|品質確認関連| N[動作確認]
+    C0 -->|デモ/プレゼン関連| Q[クライアントデモ]
+    
     C --> D[エンジニアが返答]
-    D --> E[UI/UX要件定義]
+    D --> E
     
     %% 並列処理開始
     E --> E2[ブランチ作成]
-    E2 --> F1[ワイヤーフレーム作成]
-    E2 --> F2[技術検証]
+    E2 --> F1
+    E2 --> F2
     
     F1 --> F1a[Gitコミット:設計]
     F1a --> G1{デザインレビュー}
@@ -31,23 +36,23 @@ flowchart TD
     H2 --> H2a[Gitコミット:代替案]
     H2a --> F2
     
-    G1 -->|OK| I[プロトタイプ実装]
+    G1 -->|OK| I
     G2 -->|OK| I
     
     I --> I2[Gitコミット:機能単位]
-    I2 --> J[少人数ユーザビリティテスト]
+    I2 --> J
     J --> K{テスト結果分析}
     K -->|改善必要| L[UI/UX改善]
     L --> L2[Gitコミット:改善]
     L2 --> I
-    K -->|OK| M[本実装]
+    K -->|OK| M
     M --> M2[Gitコミット:完成]
-    M2 --> N[動作確認]
+    M2 --> N
     N --> O{品質チェック}
     O -->|NG| P[バグ修正]
     P --> P2[Gitコミット:修正]
     P2 --> N
-    O -->|OK| Q[クライアントデモ]
+    O -->|OK| Q
     Q --> R{フィードバック}
     R -->|要改善| S[改善計画策定]
     S --> D
@@ -85,6 +90,31 @@ flowchart TD
 
 **これらを用いてフローチャートを必ず守り、作業を行ってください。** 
 
+## フェーズ判定の基準
+
+入力値を受け取った後のフェーズ判定は、以下の基準に基づいて行います：
+
+1. **明示的なフェーズ指定**：
+   - 入力に「要件分析を行いたい」「UI/UXの要件を定義したい」などのフェーズ名が明示的に含まれる場合は、そのフェーズに移行します。
+
+2. **キーワードに基づく判定**：
+   - 「要件」「仕様」「ユーザーストーリー」→ 要件分析フェーズ
+   - 「UI」「UX」「ユーザー体験」「画面遷移」→ UI/UX要件定義フェーズ
+   - 「ワイヤーフレーム」「デザイン」「レイアウト」→ ワイヤーフレーム作成フェーズ
+   - 「技術検証」「アーキテクチャ」「性能」「セキュリティ」→ 技術検証フェーズ
+   - 「プロトタイプ」「実装」「コーディング」→ プロトタイプ実装フェーズ
+   - 「テスト」「ユーザビリティ」「評価」→ ユーザビリティテストフェーズ
+   - 「本実装」「リファクタリング」「最適化」→ 本実装フェーズ
+   - 「品質」「バグ」「動作確認」→ 品質チェックフェーズ
+   - 「デモ」「プレゼン」「クライアント」「フィードバック」→ クライアントデモフェーズ
+
+3. **作業内容に基づく判定**：
+   - 新規プロジェクトの開始や、基本的な要件の確認が必要な場合は要件分析フェーズから開始します。
+   - コードの修正やバグ対応の場合は、問題の性質に応じて適切なフェーズに移行します。
+
+4. **前回のフェーズの継続**：
+   - 特に新しいフェーズへの移行を示す入力がない場合は、前回のフェーズを継続します。
+
 ## フェーズと関連ファイル
 
 各フェーズで利用するファイルの関連付けを以下のYAML形式で定義します：
@@ -93,93 +123,93 @@ flowchart TD
 phase_files:
   # 要件分析フェーズ
   requirements_analysis:
-    agent: [product_manager.md](mdc:.actionflows/product_manager.md)
+    agent: @product_manager.md
     templates: 
-      - [requirements_template.md](mdc:.actionflows/requirements_template.md)
-      - [user_stories_template.md](mdc:.actionflows/user_stories_template.md)
+      - @requirements_template.md
+      - @user_stories_template.md
     references:
-      - [market_research.md](mdc:.actionflows/market_research.md)
-      - [competitor_analysis.md](mdc:.actionflows/competitor_analysis.md)
+      - @market_research.md
+      - @competitor_analysis.md
 
   # UI/UX要件定義フェーズ
   ux_definition:
-    agent: [ux_designer.md](mdc:.actionflows/ux_designer.md)
+    agent: @ux_designer.md
     templates:
-      - [ux_requirements_template.md](mdc:.actionflows/ux_requirements_template.md)
-      - [user_flow_template.md](mdc:.actionflows/user_flow_template.md)
+      - @ux_requirements_template.md
+      - @user_flow_template.md
     references:
-      - [design_system.md](mdc:.actionflows/design_system.md)
-      - [usability_guidelines.md](mdc:.actionflows/usability_guidelines.md)
+      - @design_system.md
+      - @usability_guidelines.md
 
   # ワイヤーフレーム作成フェーズ
   wireframe_creation:
-    agent: [ui_designer.md](mdc:.actionflows/ui_designer.md)
+    agent: @ui_designer.md
     templates:
-      - [wireframe_template.md](mdc:.actionflows/wireframe_template.md)
-      - [component_library.md](mdc:.actionflows/component_library.md)
+      - @wireframe_template.md
+      - @component_library.md
     references:
-      - [design_system.md](mdc:.actionflows/design_system.md)
-      - [responsive_guidelines.md](mdc:.actionflows/responsive_guidelines.md)
+      - @design_system.md
+      - @responsive_guidelines.md
 
   # 技術検証フェーズ
   technical_validation:
-    agent: [architect.md](mdc:.actionflows/architect.md)
+    agent: @architect.md
     templates:
-      - [technical_spec_template.md](mdc:.actionflows/technical_spec_template.md)
-      - [api_design_template.md](mdc:.actionflows/api_design_template.md)
+      - @technical_spec_template.md
+      - @api_design_template.md
     references:
-      - [performance_benchmarks.md](mdc:.actionflows/performance_benchmarks.md)
+      - @performance_benchmarks.md
       - security_guidelines.md
 
   # プロトタイプ実装フェーズ
   prototype_implementation:
-    agent: [tech_lead.md](mdc:.actionflows/tech_lead.md)
+    agent: @tech_lead.md
     templates:
-      - [code_structure_template.md](mdc:.actionflows/code_structure_template.md)
-      - [testing_strategy_template.md](mdc:.actionflows/testing_strategy_template.md)
+      - @code_structure_template.md
+      - @testing_strategy_template.md
     references:
-      - [best_practices.md](mdc:.actionflows/best_practices.md)
-      - [code_standards.md](mdc:.actionflows/code_standards.md)
+      - @best_practices.md
+      - @code_standards.md
 
   # ユーザビリティテストフェーズ
   usability_testing:
-    agent: [ux_designer.md](mdc:.actionflows/ux_designer.md)
+    agent: @ux_designer.md
     templates:
-      - [test_scenario_template.md](mdc:.actionflows/test_scenario_template.md)
-      - [user_feedback_template.md](mdc:.actionflows/user_feedback_template.md)
+      - @test_scenario_template.md
+      - @user_feedback_template.md
     references:
-      - [user_behavior_analysis.md](mdc:.actionflows/user_behavior_analysis.md)
-      - [accessibility_guidelines.md](mdc:.actionflows/accessibility_guidelines.md)
+      - @user_behavior_analysis.md
+      - @accessibility_guidelines.md
 
   # 本実装フェーズ
   implementation:
-    agent: [senior_engineer.md](mdc:.actionflows/senior_engineer.md)
+    agent: @senior_engineer.md
     templates:
-      - [implementation_checklist.md](mdc:.actionflows/implementation_checklist.md)
-      - [documentation_template.md](mdc:.actionflows/documentation_template.md)
+      - @implementation_checklist.md
+      - @documentation_template.md
     references:
-      - [optimization_guidelines.md](mdc:.actionflows/optimization_guidelines.md)
-      - [refactoring_patterns.md](mdc:.actionflows/refactoring_patterns.md)
+      - @optimization_guidelines.md
+      - @refactoring_patterns.md
 
   # 品質チェックフェーズ
   quality_check:
-    agent: [qa_engineer.md](mdc:.actionflows/qa_engineer.md)
+    agent: @qa_engineer.md
     templates:
-      - [test_plan_template.md](mdc:.actionflows/test_plan_template.md)
-      - [bug_report_template.md](mdc:.actionflows/bug_report_template.md)
+      - @test_plan_template.md
+      - @bug_report_template.md
     references:
-      - [test_coverage_guidelines.md](mdc:.actionflows/test_coverage_guidelines.md)
-      - [regression_test_suite.md](mdc:.actionflows/regression_test_suite.md)
+      - @test_coverage_guidelines.md
+      - @regression_test_suite.md
 
   # クライアントデモフェーズ
   client_demo:
-    agent: [sales_representative.md](mdc:.actionflows/sales_representative.md)
+    agent: @sales_representative.md
     templates:
-      - [presentation_template.md](mdc:.actionflows/presentation_template.md)
-      - [demo_script_template.md](mdc:.actionflows/demo_script_template.md)
+      - @presentation_template.md
+      - @demo_script_template.md
     references:
-      - [client_demo_agent.md](mdc:.actionflows/client_demo_agent.md)
-      - [feedback_collection_form.md](mdc:.actionflows/feedback_collection_form.md)
+      - @client_demo_agent.md
+      - @feedback_collection_form.md
 ```
 
 このYAML定義を使用して、各フェーズで必要なファイルを自動的に読み込み、適切なエージェントと関連テンプレート・参考資料を活用することができます。 
