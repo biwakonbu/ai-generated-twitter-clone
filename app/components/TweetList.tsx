@@ -7,10 +7,13 @@ import {
   HeartIcon as HeartOutlineIcon,
   ChartBarIcon,
   ArrowUpTrayIcon,
+  TrashIcon,
+  EllipsisHorizontalIcon,
 } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartSolidIcon } from "@heroicons/react/24/solid";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 interface Tweet {
   id: string;
@@ -30,7 +33,9 @@ export default function TweetList({ userId }: TweetListProps = {}) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showDeleteMenu, setShowDeleteMenu] = useState<string | null>(null);
   const router = useRouter();
+  const { data: session } = useSession();
 
   const fetchTweets = useCallback(async () => {
     try {
@@ -115,6 +120,31 @@ export default function TweetList({ userId }: TweetListProps = {}) {
       // エラー時は元の状態に戻す
       console.error("いいね処理でエラーが発生しました:", error);
       fetchTweets(); // エラー時は全体を再取得
+    }
+  };
+
+  const handleDelete = async (tweetId: string) => {
+    if (!confirm("このツイートを削除してもよろしいですか？")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/tweets/${tweetId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("ツイートの削除に失敗しました");
+      }
+
+      // 削除成功後、ツイートリストを更新
+      setTweets((prevTweets) =>
+        prevTweets.filter((tweet) => tweet.id !== tweetId)
+      );
+      setShowDeleteMenu(null);
+    } catch (error) {
+      console.error("ツイート削除エラー:", error);
+      alert("ツイートの削除に失敗しました");
     }
   };
 
@@ -213,7 +243,7 @@ export default function TweetList({ userId }: TweetListProps = {}) {
       {tweets.map((tweet) => (
         <div
           key={tweet.id}
-          className="p-4 hover:bg-gray-50 dark:hover:bg-dark-hover transition-colors"
+          className="p-4 hover:bg-gray-50 dark:hover:bg-dark-hover transition-colors relative"
         >
           <Link href={`/tweet/${tweet.id}`} className="block">
             <div className="flex space-x-4">
@@ -240,6 +270,39 @@ export default function TweetList({ userId }: TweetListProps = {}) {
                   <span className="text-gray-500 dark:text-gray-400 text-sm">
                     {formatDate(tweet.createdAt)}
                   </span>
+                  {session?.user?.id === tweet.userId && (
+                    <div className="ml-auto relative">
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setShowDeleteMenu(
+                            showDeleteMenu === tweet.id ? null : tweet.id
+                          );
+                        }}
+                        className="p-2 hover:bg-gray-100 dark:hover:bg-dark-hover rounded-full transition-colors"
+                      >
+                        <EllipsisHorizontalIcon className="h-5 w-5 text-gray-500" />
+                      </button>
+                      {showDeleteMenu === tweet.id && (
+                        <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-dark-surface ring-1 ring-black ring-opacity-5 z-10">
+                          <div className="py-1">
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleDelete(tweet.id);
+                              }}
+                              className="flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-dark-hover w-full"
+                            >
+                              <TrashIcon className="h-5 w-5 mr-2" />
+                              削除
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <p className="text-gray-900 dark:text-white whitespace-pre-wrap break-words mb-2">
                   {tweet.content}

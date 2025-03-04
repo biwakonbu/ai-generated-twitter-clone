@@ -1,0 +1,25 @@
+{
+  "users": [
+    {
+      "id": "1c98652a-326a-4395-8532-fc0629e4b69d",
+      "username": "testuser",
+      "name": "Test User",
+      "email": "test@example.com",
+      "password": "$2a$10$sMzRxS5xOcCQeGz1iFsKj.XMRYDRXrCyAx9NLbN1HBu8cVWcnH.bG",
+      "createdAt": "2025-03-04T09:56:31.868Z",
+      "updatedAt": "2025-03-04T09:56:31.868Z"
+    },
+    {
+      "id": "2172bf22-b24a-4584-a261-54526361016d",
+      "username": "biwakonbu",
+      "name": "biwakonbu",
+      "email": "ryo.higasigawa@gmail.com",
+      "password": "$2b$10$fwNVr3rTo6mFL.zvjHbfA.jVwtd/WeQBzV62lFnLGJsHlGw/8nUBO",
+      "createdAt": "2025-03-04T10:00:44.279Z",
+      "updatedAt": "2025-03-04T10:00:44.279Z"
+    }
+  ],
+  "tweets": [],
+  "likes": [],
+  "replies": []
+}

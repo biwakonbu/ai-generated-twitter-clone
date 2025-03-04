@@ -8,29 +8,39 @@ export default function ThemeToggle() {
 
   // 初期化時にローカルストレージまたはシステム設定からテーマを取得
   useEffect(() => {
-    if (
-      localStorage.theme === "dark" ||
-      (!("theme" in localStorage) &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches)
-    ) {
-      setIsDarkMode(true);
-      document.documentElement.classList.add("dark");
-    } else {
+    try {
+      if (
+        localStorage.theme === "dark" ||
+        (!("theme" in localStorage) &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches)
+      ) {
+        setIsDarkMode(true);
+        document.documentElement.classList.add("dark");
+      } else {
+        setIsDarkMode(false);
+        document.documentElement.classList.remove("dark");
+      }
+    } catch (error) {
+      console.error("テーマ初期化エラー:", error);
+      // エラー時はデフォルトでライトモードに
       setIsDarkMode(false);
-      document.documentElement.classList.remove("dark");
     }
   }, []);
 
   // テーマ切り替え
   const toggleTheme = () => {
-    if (isDarkMode) {
-      document.documentElement.classList.remove("dark");
-      localStorage.theme = "light";
-      setIsDarkMode(false);
-    } else {
-      document.documentElement.classList.add("dark");
-      localStorage.theme = "dark";
-      setIsDarkMode(true);
+    try {
+      if (isDarkMode) {
+        document.documentElement.classList.remove("dark");
+        localStorage.theme = "light";
+        setIsDarkMode(false);
+      } else {
+        document.documentElement.classList.add("dark");
+        localStorage.theme = "dark";
+        setIsDarkMode(true);
+      }
+    } catch (error) {
+      console.error("テーマ切り替えエラー:", error);
     }
   };
 

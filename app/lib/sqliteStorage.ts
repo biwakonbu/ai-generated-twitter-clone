@@ -77,85 +77,105 @@ class SQLiteStorage {
   async createUser(
     userData: Omit<User, "id" | "createdAt" | "updatedAt">
   ): Promise<User> {
-    const db = getDb();
-    const id = uuidv4();
-    const now = new Date().toISOString();
+    try {
+      const db = getDb();
+      const id = uuidv4();
+      const now = new Date().toISOString();
 
-    const stmt = db.prepare(`
-      INSERT INTO users (id, username, name, email, password, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `);
+      const stmt = db.prepare(`
+        INSERT INTO users (id, username, name, email, password, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `);
 
-    stmt.run(
-      id,
-      userData.username,
-      userData.name,
-      userData.email,
-      userData.password,
-      now,
-      now
-    );
+      stmt.run(
+        id,
+        userData.username,
+        userData.name,
+        userData.email,
+        userData.password,
+        now,
+        now
+      );
 
-    return {
-      id,
-      ...userData,
-      createdAt: new Date(now),
-      updatedAt: new Date(now),
-    };
+      return {
+        id,
+        ...userData,
+        createdAt: new Date(now),
+        updatedAt: new Date(now),
+      };
+    } catch (error) {
+      console.error("ユーザー作成エラー:", error);
+      throw error;
+    }
   }
 
   async findUserByEmail(email: string): Promise<User | null> {
-    const db = getDb();
-    const stmt = db.prepare("SELECT * FROM users WHERE email = ?");
-    const row = stmt.get(email) as UserRow | undefined;
+    try {
+      const db = getDb();
+      const stmt = db.prepare("SELECT * FROM users WHERE email = ?");
+      const row = stmt.get(email) as UserRow | undefined;
 
-    if (!row) return null;
+      if (!row) return null;
 
-    return {
-      id: row.id,
-      username: row.username,
-      name: row.name,
-      email: row.email,
-      password: row.password,
-      createdAt: new Date(row.created_at),
-      updatedAt: new Date(row.updated_at),
-    };
+      return {
+        id: row.id,
+        username: row.username,
+        name: row.name,
+        email: row.email,
+        password: row.password,
+        createdAt: new Date(row.created_at),
+        updatedAt: new Date(row.updated_at),
+      };
+    } catch (error) {
+      console.error("メールでのユーザー検索エラー:", error);
+      return null;
+    }
   }
 
   async findUserByUsername(username: string): Promise<User | null> {
-    const db = getDb();
-    const stmt = db.prepare("SELECT * FROM users WHERE username = ?");
-    const row = stmt.get(username) as UserRow | undefined;
+    try {
+      const db = getDb();
+      const stmt = db.prepare("SELECT * FROM users WHERE username = ?");
+      const row = stmt.get(username) as UserRow | undefined;
 
-    if (!row) return null;
+      if (!row) return null;
 
-    return {
-      id: row.id,
-      username: row.username,
-      name: row.name,
-      email: row.email,
-      password: row.password,
-      createdAt: new Date(row.created_at),
-      updatedAt: new Date(row.updated_at),
-    };
+      return {
+        id: row.id,
+        username: row.username,
+        name: row.name,
+        email: row.email,
+        password: row.password,
+        createdAt: new Date(row.created_at),
+        updatedAt: new Date(row.updated_at),
+      };
+    } catch (error) {
+      console.error("ユーザー名でのユーザー検索エラー:", error);
+      return null;
+    }
   }
 
   async findUserById(id: string): Promise<User | null> {
-    const db = getDb();
-    const stmt = db.prepare("SELECT * FROM users WHERE id = ?");
-    const row = stmt.get(id) as UserRow | undefined;
+    try {
+      const db = getDb();
+      const stmt = db.prepare("SELECT * FROM users WHERE id = ?");
+      const row = stmt.get(id) as UserRow | undefined;
 
-    if (!row) return null;
+      if (!row) return null;
 
-    return {
-      id: row.id,
-      username: row.username,
-      name: row.name,
-      email: row.email,
-      password: row.password,
-      createdAt: new Date(row.created_at),
-      updatedAt: new Date(row.updated_at),
-    };
+      return {
+        id: row.id,
+        username: row.username,
+        name: row.name,
+        email: row.email,
+        password: row.password,
+        createdAt: new Date(row.created_at),
+        updatedAt: new Date(row.updated_at),
+      };
+    } catch (error) {
+      console.error("IDでのユーザー検索エラー:", error);
+      return null;
+    }
   }
 
   // ツイート関連の操作

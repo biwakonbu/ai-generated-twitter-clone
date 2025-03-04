@@ -1,0 +1,40 @@
+{
+  "users": [
+    {
+      "id": "366ec629-6128-49ed-bd93-e9839f0a472d",
+      "username": "testuser",
+      "name": "Test User",
+      "email": "test@example.com",
+      "password": "$2b$10$Mvg5sw7iKZ.4IEylt0KDqe83kUjHCyDtTLCX9wK7rXZLjjU59OkSa",
+      "createdAt": "2025-03-04T10:10:39.811Z",
+      "updatedAt": "2025-03-04T10:10:39.811Z"
+    },
+    {
+      "id": "4fc5f66d-3fe1-42ac-baa9-09a29c0d743d",
+      "username": "biwakonbu",
+      "name": "biwakonbu",
+      "email": "ryo.higasigawa@gmail.com",
+      "password": "$2b$10$gYXz0NXPTe2EKlWNpTD7euot8hjYGbGubrWvsG6iyKzFpb1v7EAd.",
+      "createdAt": "2025-03-04T10:10:56.932Z",
+      "updatedAt": "2025-03-04T10:10:56.932Z"
+    }
+  ],
+  "tweets": [
+    {
+      "id": "0222b4b1-6511-4592-8e00-7c96532f97d7",
+      "content": "a",
+      "userId": "4fc5f66d-3fe1-42ac-baa9-09a29c0d743d",
+      "createdAt": "2025-03-04T11:13:18.226Z",
+      "updatedAt": "2025-03-04T11:13:18.226Z"
+    },
+    {
+      "id": "f4b31306-dd1d-46dd-86de-2b04b92dce9a",
+      "content": "a",
+      "userId": "4fc5f66d-3fe1-42ac-baa9-09a29c0d743d",
+      "createdAt": "2025-03-04T11:26:13.114Z",
+      "updatedAt": "2025-03-04T11:26:13.114Z"
+    }
+  ],
+  "likes": [],
+  "replies": []
+}

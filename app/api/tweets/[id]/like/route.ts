@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
-import { auth } from "../../../../../auth";
-
-const prisma = new PrismaClient();
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../../../auth/[...nextauth]/route";
+import { serverStorage } from "../../../../lib/serverStorage";
 
 // いいねの追加/削除を行うAPI
 export async function POST(
@@ -11,28 +11,16 @@ export async function POST(
 ) {
   try {
     const tweetId = params.id;
-    const session = await auth();
+    const session = await getServerSession(authOptions);
 
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
     }
 
-    // 現在ログイン中のユーザーを取得
-    const currentUser = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-
-    if (!currentUser) {
-      return NextResponse.json(
-        { error: "ユーザーが見つかりません" },
-        { status: 404 }
-      );
-    }
+    const userId = session.user.id;
 
     // 対象のツイートが存在するか確認
-    const tweet = await prisma.tweet.findUnique({
-      where: { id: tweetId },
-    });
+    const tweet = await serverStorage.getTweetById(tweetId);
 
     if (!tweet) {
       return NextResponse.json(
@@ -42,31 +30,18 @@ export async function POST(
     }
 
     // 既にいいねしているか確認
-    const existingLike = await prisma.like.findUnique({
-      where: {
-        userId_tweetId: {
-          userId: currentUser.id,
-          tweetId,
-        },
-      },
-    });
+    const hasLiked = await serverStorage.hasUserLikedTweet(userId, tweetId);
 
     // いいねが存在する場合は削除、存在しない場合は追加
-    if (existingLike) {
+    if (hasLiked) {
       // いいねを削除
-      await prisma.like.delete({
-        where: {
-          id: existingLike.id,
-        },
-      });
+      await serverStorage.deleteLike(userId, tweetId);
       return NextResponse.json({ liked: false });
     } else {
       // いいねを追加
-      await prisma.like.create({
-        data: {
-          userId: currentUser.id,
-          tweetId,
-        },
+      await serverStorage.createLike({
+        userId,
+        tweetId,
       });
       return NextResponse.json({ liked: true });
     }

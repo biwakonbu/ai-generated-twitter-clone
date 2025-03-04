@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-import { auth } from "../../../auth";
-
-const prisma = new PrismaClient();
+import { serverStorage } from "../../lib/serverStorage";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../auth/[...nextauth]/route";
 
 // ツイートを投稿するAPI
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
+    const session = await getServerSession(authOptions);
 
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
     }
 
@@ -23,36 +22,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 現在ログイン中のユーザーを取得
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-
-    if (!user) {
-      return NextResponse.json(
-        { error: "ユーザーが見つかりません" },
-        { status: 404 }
-      );
-    }
-
     // ツイートを作成
-    const tweet = await prisma.tweet.create({
-      data: {
-        content,
-        userId: user.id,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            username: true,
-          },
-        },
-      },
+    const tweet = await serverStorage.createTweet({
+      content,
+      userId: session.user.id,
     });
 
-    return NextResponse.json(tweet, { status: 201 });
+    const user = await serverStorage.findUserById(session.user.id);
+
+    const response = {
+      ...tweet,
+      user: {
+        id: user?.id,
+        name: user?.name,
+        username: user?.username,
+      },
+    };
+
+    return NextResponse.json(response, { status: 201 });
   } catch (error) {
     console.error("ツイート投稿エラー:", error);
     return NextResponse.json(
@@ -68,47 +55,38 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId");
 
-    // 仮のログインユーザーID（認証機能実装後に修正）
-    const currentUserId = "user123";
+    // セッションからユーザー情報を取得（ログインしていなければnull）
+    const session = await getServerSession(authOptions);
+    const currentUserId = session?.user?.id || null;
 
     // ユーザーIDが指定されている場合はそのユーザーのツイートのみを取得
     const tweets = userId
-      ? await prisma.tweet.findMany({
-          where: {
-            userId: userId,
-          },
-          include: {
-            user: true,
-          },
-        })
-      : await prisma.tweet.findMany({
-          include: {
-            user: true,
-          },
-        });
+      ? await serverStorage.getTweetsByUserId(userId)
+      : await serverStorage.getTweets();
 
     // いいね情報を追加したツイートリストを作成
     const tweetsWithLikes = await Promise.all(
       tweets.map(async (tweet) => {
         // ツイートのいいね数を取得
-        const likes = await prisma.like.findMany({
-          where: {
-            tweetId: tweet.id,
-          },
-        });
+        const likes = await serverStorage.getLikesByTweetId(tweet.id);
 
         // 現在のユーザーがいいねしているかどうかを確認
-        const isLiked = await prisma.like.findFirst({
-          where: {
-            tweetId: tweet.id,
-            userId: currentUserId,
-          },
-        });
+        const isLiked = currentUserId
+          ? await serverStorage.hasUserLikedTweet(currentUserId, tweet.id)
+          : false;
+
+        // ツイート投稿者の情報を取得
+        const user = await serverStorage.findUserById(tweet.userId);
 
         return {
           ...tweet,
           likes: likes.length,
-          isLiked: !!isLiked,
+          isLiked: isLiked,
+          user: {
+            id: user?.id,
+            name: user?.name,
+            username: user?.username,
+          },
         };
       })
     );

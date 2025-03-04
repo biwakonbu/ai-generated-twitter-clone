@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { Dialog } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
@@ -8,11 +10,7 @@ interface TweetModalProps {
   onTweet: (content: string) => Promise<void>;
 }
 
-export default function TweetModal({
-  isOpen,
-  onClose,
-  onTweet,
-}: TweetModalProps) {
+const TweetModal = ({ isOpen, onClose, onTweet }: TweetModalProps) => {
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -38,7 +36,7 @@ export default function TweetModal({
       className="fixed inset-0 z-50 overflow-y-auto"
     >
       <div className="flex min-h-screen items-center justify-center">
-        <Dialog.Overlay className="fixed inset-0 bg-black opacity-40" />
+        <div className="fixed inset-0 bg-black opacity-40" />
 
         <div className="relative bg-white dark:bg-dark-bg rounded-xl w-full max-w-lg mx-4 p-4">
           <button
@@ -78,4 +76,6 @@ export default function TweetModal({
       </div>
     </Dialog>
   );
-}
+};
+
+export default TweetModal;

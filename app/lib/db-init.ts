@@ -1,13 +1,32 @@
-import { initDatabase } from "../db/database";
+import { PrismaClient } from "@prisma/client";
 
-// アプリケーション起動時にデータベースを初期化する
-export function initializeDatabase() {
+let prisma: PrismaClient;
+
+if (process.env.NODE_ENV === "production") {
+  prisma = new PrismaClient();
+} else {
+  // @ts-ignore
+  if (!global.prisma) {
+    // @ts-ignore
+    global.prisma = new PrismaClient();
+  }
+  // @ts-ignore
+  prisma = global.prisma;
+}
+
+export async function initializeDatabase() {
+  if (typeof window !== "undefined") {
+    throw new Error("このコードはサーバーサイドでのみ実行できます");
+  }
+
   try {
-    console.log("データベースを初期化しています...");
-    initDatabase();
-    console.log("データベースの初期化が完了しました。");
+    // データベースの接続テスト
+    await prisma.$connect();
+    console.log("データベース接続成功");
   } catch (error) {
-    console.error("データベースの初期化中にエラーが発生しました:", error);
+    console.error("データベース接続エラー:", error);
     throw error;
   }
 }
+
+export { prisma };

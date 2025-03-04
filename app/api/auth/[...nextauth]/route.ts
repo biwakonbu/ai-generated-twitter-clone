@@ -1,8 +1,17 @@
-import NextAuth from "next-auth";
+import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { sqliteStorage } from "../../../lib/sqliteStorage";
-import bcrypt from "bcrypt";
+import { serverStorage } from "../../../lib/serverStorage";
+import bcrypt from "bcryptjs";
 import { JWT } from "next-auth/jwt";
+import { Session } from "next-auth";
+
+// データベースの初期化を試みる
+try {
+  serverStorage.initDatabase();
+  console.log("データベースが正常に初期化されました");
+} catch (error) {
+  console.error("データベース初期化エラー:", error);
+}
 
 // NextAuthの型定義を拡張
 declare module "next-auth" {
@@ -30,76 +39,65 @@ declare module "next-auth/jwt" {
   }
 }
 
-export const authOptions = {
+// NextAuth.js の設定
+export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
-      name: "ログイン情報",
+      name: "Credentials",
       credentials: {
-        email: {
-          label: "メールアドレス",
-          type: "email",
-          placeholder: "メールアドレスを入力",
-        },
-        password: {
-          label: "パスワード",
-          type: "password",
-          placeholder: "パスワードを入力",
-        },
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
+        try {
+          if (!credentials?.email || !credentials?.password) {
+            console.log("認証情報が不足しています");
+            return null;
+          }
+
+          const user = await serverStorage.findUserByEmail(credentials.email);
+
+          if (!user) {
+            console.log(
+              `メールアドレス ${credentials.email} のユーザーが見つかりません`
+            );
+            return null;
+          }
+
+          const isPasswordValid = await bcrypt.compare(
+            credentials.password,
+            user.password
+          );
+
+          if (!isPasswordValid) {
+            console.log("パスワードが一致しません");
+            return null;
+          }
+
+          console.log(`ユーザー ${user.username} が正常にログインしました`);
+
+          return {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            username: user.username,
+          };
+        } catch (error) {
+          console.error("認証エラー:", error);
           return null;
         }
-
-        // メールアドレスでユーザーを検索
-        const user = await sqliteStorage.findUserByEmail(credentials.email);
-
-        if (!user) {
-          console.log("ユーザーが見つかりません:", credentials.email);
-          return null;
-        }
-
-        // パスワードの検証
-        const isValidPassword = await bcrypt.compare(
-          credentials.password,
-          user.password
-        );
-
-        if (!isValidPassword) {
-          console.log("パスワードが一致しません:", credentials.email);
-          return null;
-        }
-
-        // 認証成功時はユーザー情報を返す（パスワードは除外）
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          username: user.username,
-        };
       },
     }),
   ],
-  pages: {
-    signIn: "/login",
-    signOut: "/",
-    error: "/login",
-  },
-  session: {
-    strategy: "jwt" as const,
-    maxAge: 30 * 24 * 60 * 60, // 30日間
-  },
   callbacks: {
-    async jwt({ token, user }: { token: JWT; user: any }) {
-      // 初回ログイン時にユーザー情報をトークンに追加
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
         token.username = user.username;
       }
       return token;
     },
-    async session({ session, token }: { session: any; token: JWT }) {
-      // セッションにユーザー情報を追加
+    async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.id;
         session.user.username = token.username;
@@ -107,10 +105,20 @@ export const authOptions = {
       return session;
     },
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  pages: {
+    signIn: "/login",
+    signOut: "/",
+    error: "/login",
+  },
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30日
+  },
   debug: process.env.NODE_ENV === "development",
+  secret: process.env.NEXTAUTH_SECRET || "your-fallback-secret-key",
 };
 
+// NextAuth ハンドラーの作成
 const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };

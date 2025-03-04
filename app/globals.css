@@ -5,6 +5,12 @@
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-rgb: 255, 255, 255;
+  --twitter-blue: #1da1f2;
+  --twitter-black: #14171a;
+  --twitter-dark-gray: #657786;
+  --twitter-light-gray: #aab8c2;
+  --twitter-extra-light-gray: #e1e8ed;
+  --twitter-white: #ffffff;
 }
 
 .dark {
@@ -16,6 +22,8 @@ body {
   color: rgb(var(--foreground-rgb));
   background: rgb(var(--background-rgb));
   transition: color 0.3s ease, background 0.3s ease;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
 }
 
 @layer utilities {
@@ -42,4 +50,85 @@ body {
 
 .heart-animation {
   animation: heart-burst 0.3s ease-out;
+}
+
+/* Twitter風のスタイル */
+.twitter-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+.twitter-header {
+  border-bottom: 1px solid var(--twitter-extra-light-gray);
+  padding: 15px 0;
+  font-weight: bold;
+  font-size: 19px;
+}
+
+.twitter-tweet {
+  border-bottom: 1px solid var(--twitter-extra-light-gray);
+  padding: 15px 0;
+  display: flex;
+}
+
+.twitter-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  margin-right: 10px;
+  background-color: var(--twitter-light-gray);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--twitter-white);
+  font-weight: bold;
+}
+
+.twitter-tweet-content {
+  flex: 1;
+}
+
+.twitter-name {
+  font-weight: bold;
+  margin-right: 5px;
+}
+
+.twitter-username {
+  color: var(--twitter-dark-gray);
+}
+
+.twitter-text {
+  margin: 5px 0;
+  line-height: 1.4;
+}
+
+.twitter-actions {
+  display: flex;
+  margin-top: 10px;
+  color: var(--twitter-dark-gray);
+}
+
+.twitter-action {
+  margin-right: 30px;
+  display: flex;
+  align-items: center;
+}
+
+.twitter-action:hover {
+  color: var(--twitter-blue);
+}
+
+.twitter-button {
+  background-color: var(--twitter-blue);
+  color: white;
+  border-radius: 9999px;
+  font-weight: bold;
+  padding: 10px 16px;
+  border: none;
+  transition: background-color 0.2s;
+}
+
+.twitter-button:hover {
+  background-color: #1a91da;
 }
